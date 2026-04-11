@@ -1,9 +1,9 @@
 import "dotenv/config";
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import readline from "readline";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 const rl = readline.createInterface({
@@ -11,19 +11,7 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-const messages = [
-  {
-    role: "system",
-    content: `You are a meeting prep assistant for sales reps and recruiters. 
-    When given information about a person and a meeting context you will generate:
-    1. Five tailored talking points specific to that person
-    2. Three background facts about them
-    3. Two ice breakers based on their interests
-    Always format your response cleanly and professionally.
-    Never make up facts you are not given.
-    If information is missing, tell the user what additional context would make the prep stronger.`,
-  },
-];
+const messages = [];
 
 function chat() {
   rl.question("You: ", async (userInput) => {
@@ -38,12 +26,21 @@ function chat() {
       content: userInput,
     });
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+    const response = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 1024,
+      system: `You are a meeting prep assistant for sales reps and recruiters. 
+      When given information about a person and a meeting context you will generate:
+      1. Five tailored talking points specific to that person
+      2. Three background facts about them
+      3. Two ice breakers based on their interests
+      Always format your response cleanly and professionally.
+      Never make up facts you are not given.
+      If information is missing tell the user what additional context would make the prep stronger.`,
       messages: messages,
     });
 
-    const reply = response.choices[0].message.content;
+    const reply = response.content[0].text;
 
     messages.push({
       role: "assistant",
@@ -55,5 +52,5 @@ function chat() {
   });
 }
 
-console.log('Chatbot ready! Type "exit" to quit.\n');
+console.log('Claude assistant ready! Type "exit" to quit.\n');
 chat();
